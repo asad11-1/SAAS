@@ -121,17 +121,19 @@ const getSubdomain = () => {
   };
 
   const login = async (email: string, password: string) => {
-    const subdomain = getSubdomain();
+    // ✅ TEMPORARY FIX: Hardcode subdomain for testing
+    const subdomain = 'vmta'; // Force vmta subdomain
+    
+    console.log('🔍 Forcing subdomain to:', subdomain);
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-subdomain': subdomain,
+        'x-subdomain': subdomain,  // This should now be 'vmta'
       },
       body: JSON.stringify({ email, password }),
     });
-
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Login failed');
