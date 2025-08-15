@@ -38,8 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Get current subdomain
-  const getSubdomain = () => {
-    if (typeof window === 'undefined') return 'admin';
+// Get current subdomain
+const getSubdomain = () => {
+    if (typeof window === 'undefined') return 'vmta';
     
     const hostname = window.location.hostname;
     
@@ -62,7 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return ['www', 'api', 'mail', 'ftp'].includes(subdomain) ? 'admin' : subdomain;
     }
     
-    return 'admin';
+    // ✅ FIX: For main domain conceptkooistra.nl, return 'vmta'
+    if (hostname === 'conceptkooistra.nl') {
+      return 'vmta';
+    }
+    
+    return 'admin';  // Only for admin subdomains
   };
 
   // Initialize auth state
