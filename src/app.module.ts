@@ -1,4 +1,3 @@
-// src/app.module.ts
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
@@ -6,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { CompanyModule } from './company/company.module';
 import { BranchModule } from './branch/branch.module';
+import { ContactModule } from './contact/contact.module';
 import { StudentModule } from './student/student.module';
 import { ImportModule } from './import/import.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
@@ -24,6 +24,7 @@ import { JwtService } from './auth/jwt.service';
     TenantsModule,
     CompanyModule,
     BranchModule,
+    ContactModule,
     StudentModule,
     ImportModule,
   ],

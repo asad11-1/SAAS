@@ -12,7 +12,8 @@ export class BranchService {
       .from('branches')
       .select(`
         *,
-        company:companies(id, naam)
+        company:companies(id, naam),
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, emailadres, telefoonnummer, mobiel, is_primary, is_active)
       `)
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false });
@@ -34,6 +35,7 @@ export class BranchService {
       .select(`
         *,
         company:companies(id, naam, emailadres, telefoon),
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, afdeling, emailadres, telefoonnummer, mobiel, notities, is_primary, is_active),
         students(id, voornaam, achternaam, emailadres, is_active)
       `)
       .eq('id', id)
@@ -66,7 +68,11 @@ export class BranchService {
         tenant_id: tenantId,
         status: branchData.status || 'actief'
       })
-      .select()
+      .select(`
+        *,
+        company:companies(id, naam),
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, emailadres, telefoonnummer, mobiel, is_primary, is_active)
+      `)
       .single();
 
     if (error) throw error;
@@ -81,7 +87,11 @@ export class BranchService {
       .update({ ...branchData, updated_at: new Date().toISOString() })
       .eq('id', id)
       .eq('tenant_id', tenantId)
-      .select()
+      .select(`
+        *,
+        company:companies(id, naam),
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, emailadres, telefoonnummer, mobiel, is_primary, is_active)
+      `)
       .single();
 
     if (error) throw error;
@@ -100,6 +110,17 @@ export class BranchService {
 
     if (students && students.length > 0) {
       throw new Error('Cannot delete branch with linked students');
+    }
+
+    // Check if branch has contacts
+    const { data: contacts } = await supabase
+      .from('contacts')
+      .select('id')
+      .eq('branch_id', id)
+      .eq('tenant_id', tenantId);
+
+    if (contacts && contacts.length > 0) {
+      throw new Error('Cannot delete branch with linked contacts. Please delete contacts first.');
     }
 
     const { error } = await supabase

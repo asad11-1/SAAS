@@ -10,7 +10,11 @@ export class CompanyService {
     
     const { data, error } = await supabase
       .from('companies')
-      .select('*')
+      .select(`
+        *,
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, emailadres, telefoonnummer, mobiel, is_primary, is_active),
+        branches(id, naam_vestiging, status)
+      `)
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false });
 
@@ -23,7 +27,11 @@ export class CompanyService {
     
     const { data, error } = await supabase
       .from('companies')
-      .select('*, branches(*)')
+      .select(`
+        *,
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, afdeling, emailadres, telefoonnummer, mobiel, notities, is_primary, is_active),
+        branches(id, naam_vestiging, straat, huisnummer, postcode, plaats, status)
+      `)
       .eq('id', id)
       .eq('tenant_id', tenantId)
       .single();
@@ -37,8 +45,16 @@ export class CompanyService {
     
     const { data, error } = await supabase
       .from('companies')
-      .insert({ ...companyData, tenant_id: tenantId })
-      .select()
+      .insert({ 
+        ...companyData, 
+        tenant_id: tenantId,
+        status: companyData.status || 'actief'
+      })
+      .select(`
+        *,
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, emailadres, telefoonnummer, mobiel, is_primary, is_active),
+        branches(id, naam_vestiging, status)
+      `)
       .single();
 
     if (error) throw error;
@@ -50,10 +66,14 @@ export class CompanyService {
     
     const { data, error } = await supabase
       .from('companies')
-      .update(companyData)
+      .update({ ...companyData, updated_at: new Date().toISOString() })
       .eq('id', id)
       .eq('tenant_id', tenantId)
-      .select()
+      .select(`
+        *,
+        contacts(id, voornaam, tussenvoegsel, achternaam, functie, emailadres, telefoonnummer, mobiel, is_primary, is_active),
+        branches(id, naam_vestiging, status)
+      `)
       .single();
 
     if (error) throw error;
@@ -63,6 +83,39 @@ export class CompanyService {
   async remove(id: string, tenantId: string) {
     const supabase = this.supabaseService.getClient();
     
+    // Check if company has students
+    const { data: students } = await supabase
+      .from('students')
+      .select('id')
+      .eq('company_id', id)
+      .eq('tenant_id', tenantId);
+
+    if (students && students.length > 0) {
+      throw new Error('Cannot delete company with linked students');
+    }
+
+    // Check if company has branches
+    const { data: branches } = await supabase
+      .from('branches')
+      .select('id')
+      .eq('company_id', id)
+      .eq('tenant_id', tenantId);
+
+    if (branches && branches.length > 0) {
+      throw new Error('Cannot delete company with linked branches. Please delete branches first.');
+    }
+
+    // Check if company has contacts
+    const { data: contacts } = await supabase
+      .from('contacts')
+      .select('id')
+      .eq('company_id', id)
+      .eq('tenant_id', tenantId);
+
+    if (contacts && contacts.length > 0) {
+      throw new Error('Cannot delete company with linked contacts. Please delete contacts first.');
+    }
+
     const { error } = await supabase
       .from('companies')
       .delete()
