@@ -1,3 +1,5 @@
+// src/branch/branch.controller.ts - Updated with converted companies endpoints
+
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query, UseGuards } from '@nestjs/common';
 import { BranchService } from './branch.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -15,11 +17,11 @@ export class BranchController {
     const tenantId = req.tokenPayload?.role === 'super_admin' 
       ? req.body.tenant_id || req.tenant?.id 
       : req.tenant?.id;
-    
+
     if (!tenantId) {
       throw new Error('Tenant ID is required');
     }
-    
+
     return this.branchService.create(createBranchDto, tenantId);
   }
 
@@ -29,12 +31,40 @@ export class BranchController {
     const tenantId = req.tokenPayload?.role === 'super_admin' 
       ? req.query.tenant_id || req.tenant?.id 
       : req.tenant?.id;
-    
+
     if (!tenantId) {
       throw new Error('Tenant ID is required');
     }
-    
+
     return this.branchService.findAll(tenantId, companyId);
+  }
+
+  @Get('converted')
+  @Roles('super_admin', 'tenant_admin', 'user')
+  getConvertedBranches(@Req() req, @Query('company_id') companyId?: string) {
+    const tenantId = req.tokenPayload?.role === 'super_admin' 
+      ? req.query.tenant_id || req.tenant?.id 
+      : req.tenant?.id;
+
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    return this.branchService.getConvertedBranches(tenantId, companyId);
+  }
+
+  @Get('stats')
+  @Roles('super_admin', 'tenant_admin')
+  getBranchStats(@Req() req) {
+    const tenantId = req.tokenPayload?.role === 'super_admin' 
+      ? req.query.tenant_id || req.tenant?.id 
+      : req.tenant?.id;
+
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    return this.branchService.getBranchStats(tenantId);
   }
 
   @Get('by-company/:companyId')
@@ -43,11 +73,11 @@ export class BranchController {
     const tenantId = req.tokenPayload?.role === 'super_admin' 
       ? req.query.tenant_id || req.tenant?.id 
       : req.tenant?.id;
-    
+
     if (!tenantId) {
       throw new Error('Tenant ID is required');
     }
-    
+
     return this.branchService.findByCompany(companyId, tenantId);
   }
 
@@ -57,12 +87,54 @@ export class BranchController {
     const tenantId = req.tokenPayload?.role === 'super_admin' 
       ? req.query.tenant_id || req.tenant?.id 
       : req.tenant?.id;
-    
+
     if (!tenantId) {
       throw new Error('Tenant ID is required');
     }
-    
+
     return this.branchService.findOne(id, tenantId);
+  }
+
+  @Get(':id/original-company')
+  @Roles('super_admin', 'tenant_admin', 'user')
+  getOriginalCompanyData(@Param('id') id: string, @Req() req) {
+    const tenantId = req.tokenPayload?.role === 'super_admin' 
+      ? req.query.tenant_id || req.tenant?.id 
+      : req.tenant?.id;
+
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    return this.branchService.getOriginalCompanyData(id, tenantId);
+  }
+
+  @Get(':id/similar')
+  @Roles('super_admin', 'tenant_admin')
+  findSimilarBranches(@Param('id') id: string, @Req() req) {
+    const tenantId = req.tokenPayload?.role === 'super_admin' 
+      ? req.query.tenant_id || req.tenant?.id 
+      : req.tenant?.id;
+
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    return this.branchService.findSimilarBranches(id, tenantId);
+  }
+
+  @Post(':id/revert-to-company')
+  @Roles('super_admin', 'tenant_admin')
+  revertBranchToCompany(@Param('id') id: string, @Req() req) {
+    const tenantId = req.tokenPayload?.role === 'super_admin' 
+      ? req.body.tenant_id || req.tenant?.id 
+      : req.tenant?.id;
+
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    return this.branchService.revertBranchToCompany(id, tenantId);
   }
 
   @Patch(':id')
@@ -71,11 +143,11 @@ export class BranchController {
     const tenantId = req.tokenPayload?.role === 'super_admin' 
       ? req.body.tenant_id || req.tenant?.id 
       : req.tenant?.id;
-    
+
     if (!tenantId) {
       throw new Error('Tenant ID is required');
     }
-    
+
     return this.branchService.update(id, updateBranchDto, tenantId);
   }
 
@@ -85,11 +157,11 @@ export class BranchController {
     const tenantId = req.tokenPayload?.role === 'super_admin' 
       ? req.query.tenant_id || req.tenant?.id 
       : req.tenant?.id;
-    
+
     if (!tenantId) {
       throw new Error('Tenant ID is required');
     }
-    
+
     return this.branchService.remove(id, tenantId);
   }
 }
